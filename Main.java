@@ -15,7 +15,7 @@ public class Main {
 
     public static void main(String[] args) {
         Main main = new Main();
-        int d = main.premultiply(2);
+        int d = main.premultiply(2) * add(1,2);
     }
 
 }

@@ -34,7 +34,7 @@ type MethodRef struct {
 type MethodRefResolved struct {
 	class      string
 	name       string
-	methodType string
+	descriptor string
 }
 
 type FieldRef = MethodRef
@@ -81,7 +81,7 @@ func (constantPool ConstantPool) resolveFieldRef(index u2) FieldRefResolved {
 
 		nameAndType := constantPool[methodRef.NameAndTypeIndex-1].info.NameAndType
 		methodRefResolved.name = constantPool.resolveString(nameAndType.nameIndex)
-		methodRefResolved.methodType = constantPool.resolveString(nameAndType.descriptor)
+		methodRefResolved.descriptor = constantPool.resolveString(nameAndType.descriptor)
 
 		return methodRefResolved
 
@@ -108,7 +108,7 @@ func (constantPool ConstantPool) resolveMethodRef(index u2) MethodRefResolved {
 
 		nameAndType := constantPool[methodRef.NameAndTypeIndex-1].info.NameAndType
 		methodRefResolved.name = constantPool.resolveString(nameAndType.nameIndex)
-		methodRefResolved.methodType = constantPool.resolveString(nameAndType.descriptor)
+		methodRefResolved.descriptor = constantPool.resolveString(nameAndType.descriptor)
 
 		return methodRefResolved
 

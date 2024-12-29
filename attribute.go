@@ -23,7 +23,7 @@ type CodeAttribute struct {
 	attributes     []Attribute
 }
 
-func (codeAttribute *CodeAttribute) toFrame(class Class, args ...interface{}) Frame {
+func (codeAttribute *CodeAttribute) toFrame(class *Class, args ...interface{}) Frame {
 
 	frame := Frame{
 		code:               codeAttribute.code,
@@ -39,7 +39,7 @@ func (codeAttribute *CodeAttribute) toFrame(class Class, args ...interface{}) Fr
 	return frame
 }
 
-func (attribute *Attribute) toCodeAttribute() CodeAttribute {
+func (attribute *Attribute) toCodeAttribute() *CodeAttribute {
 	codeAttribute := CodeAttribute{
 		name:      attribute.name,
 		maxStack:  binary.BigEndian.Uint16(attribute.info[0:2]),
@@ -47,5 +47,5 @@ func (attribute *Attribute) toCodeAttribute() CodeAttribute {
 	}
 	codeLength := binary.BigEndian.Uint32(attribute.info[4:8])
 	codeAttribute.code = attribute.info[8 : 8+codeLength]
-	return codeAttribute
+	return &codeAttribute
 }

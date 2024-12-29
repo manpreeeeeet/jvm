@@ -10,8 +10,12 @@ func main() {
 	loader := &ClassLoader{reader: file}
 
 	class := loader.loadClass()
+	err := file.Close()
+	if err != nil {
+		return
+	}
 
-	var mainCode CodeAttribute
+	var mainCode *CodeAttribute
 	for _, method := range class.methods {
 		if method.name == "main" {
 			mainCode = (&method.attributes[0]).toCodeAttribute()
@@ -19,10 +23,13 @@ func main() {
 		}
 	}
 
-	frame := mainCode.toFrame(class)
-	frame.Exec()
+	frame := mainCode.toFrame(&class)
 
-	if frame.operandStack[len(frame.operandStack)-1] == nil {
+	jvm := JVM{classes: make([]*Class, 0)}
+	jvm.classes = append(jvm.classes, &class)
+	jvm.Exec(&frame)
+
+	if frame.stack[len(frame.stack)-1] == nil {
 		fmt.Printf("JVM exited with status code 0")
 	}
 

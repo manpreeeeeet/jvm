@@ -1,11 +1,11 @@
 package main
 
 func (frame *Frame) pop() interface{} {
-	value := (frame.operandStack)[len(frame.operandStack)-1]
-	frame.operandStack = frame.operandStack[:len(frame.operandStack)-1]
+	value := (frame.stack)[len(frame.stack)-1]
+	frame.stack = frame.stack[:len(frame.stack)-1]
 	return value
 }
 
 func (frame *Frame) push(value interface{}) {
-	frame.operandStack = append(frame.operandStack, value)
+	frame.stack = append(frame.stack, value)
 }

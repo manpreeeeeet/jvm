@@ -1,5 +1,7 @@
 package main
 
+import "errors"
+
 type u1 = uint8
 type u2 = uint16
 type u4 = uint32
@@ -23,11 +25,11 @@ type Interface struct {
 	name string
 }
 
-func (class *Class) findMethod(name string) Method {
+func (class *Class) findMethod(name string, descriptor string) (*Method, error) {
 	for i := 0; i < len(class.methods); i++ {
-		if class.methods[i].name == name {
-			return class.methods[i]
+		if class.methods[i].name == name && class.methods[i].descriptor == descriptor {
+			return &class.methods[i], nil
 		}
 	}
-	panic("method not found")
+	return nil, errors.New("method not found " + name)
 }
