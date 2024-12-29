@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"log"
 	"os"
 )
 
@@ -60,5 +62,18 @@ func (jvm *JVM) executeMethod(className string, methodName string, methodDescrip
 	frame := code.toFrame(class, args...)
 	result := jvm.Exec(&frame)
 
+	argString := ""
+	for i, arg := range args {
+		if i > 0 {
+			argString += ","
+		}
+		switch arg.(type) {
+		case *Object:
+			argString += "this"
+		default:
+			argString += fmt.Sprintf("%v", arg)
+		}
+	}
+	log.Printf("%s.%s(%s) --> %v\n", className, methodName, argString, result)
 	return result, nil
 }

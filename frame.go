@@ -6,7 +6,7 @@ import (
 
 type Frame struct {
 	stack              []interface{}
-	localVariables     []interface{} // function parameters basically
+	localVariables     []interface{}
 	code               []byte
 	instructionPointer uint32
 	class              *Class
