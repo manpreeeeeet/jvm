@@ -70,20 +70,20 @@ func (constantPool ConstantPool) resolveString(index u2) string {
 }
 
 func (constantPool ConstantPool) resolveFieldRef(index u2) FieldRefResolved {
-	if constantPool[index-1].tag == CONSTANT_Methodref {
-		methodRef := constantPool[index-1].info.MethodRef
+	if constantPool[index-1].tag == CONSTANT_Fieldref {
+		fieldRef := constantPool[index-1].info.FieldRef
 
-		methodRefResolved := MethodRefResolved{class: constantPool.resolveClass(methodRef.ClassIndex)}
+		resolved := FieldRefResolved{class: constantPool.resolveClass(fieldRef.ClassIndex)}
 
-		if constantPool[methodRef.NameAndTypeIndex-1].tag != CONSTANT_NameAndType {
+		if constantPool[fieldRef.NameAndTypeIndex-1].tag != CONSTANT_NameAndType {
 			panic("wrong name and type index")
 		}
 
-		nameAndType := constantPool[methodRef.NameAndTypeIndex-1].info.NameAndType
-		methodRefResolved.name = constantPool.resolveString(nameAndType.nameIndex)
-		methodRefResolved.descriptor = constantPool.resolveString(nameAndType.descriptor)
+		nameAndType := constantPool[fieldRef.NameAndTypeIndex-1].info.NameAndType
+		resolved.name = constantPool.resolveString(nameAndType.nameIndex)
+		resolved.descriptor = constantPool.resolveString(nameAndType.descriptor)
 
-		return methodRefResolved
+		return resolved
 
 	}
 	panic("yooo this isn't a field ref")

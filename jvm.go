@@ -2,10 +2,30 @@ package main
 
 import (
 	"errors"
+	"os"
 )
 
 type JVM struct {
 	classes []*Class
+}
+
+func (jvm *JVM) addClass(className string) (*Class, error) {
+	class, err := jvm.getClass(className)
+	if class != nil {
+		return class, nil
+	}
+
+	file, err := os.Open(className + ".class")
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	loader := &ClassLoader{reader: file}
+
+	loadedClass := loader.loadClass()
+	jvm.classes = append(jvm.classes, &loadedClass)
+	return &loadedClass, nil
 }
 
 func (jvm *JVM) getClass(className string) (*Class, error) {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 )
 
 type Frame struct {
@@ -29,43 +28,35 @@ func (jvm *JVM) Exec(frame *Frame) interface{} {
 		case 0: // noop
 
 		case 4: // iconst_1
-			frame.stack = append(frame.stack, 1)
+			frame.push(1)
 		case 5: // iconst_2
-			frame.stack = append(frame.stack, 2)
+			frame.push(2)
 		case 6: // iconst_3
-			frame.stack = append(frame.stack, 3)
+			frame.push(3)
 		case 7: // iconst_4
-			frame.stack = append(frame.stack, 4)
-		case 17: // sipush
+			frame.push(4)
 		case 26: // iload_0
-			frame.stack = append(frame.stack, frame.localVariables[0])
+			frame.push(frame.localVariables[0])
 		case 27: // iload_1
-			frame.stack = append(frame.stack, frame.localVariables[1])
+			frame.push(frame.localVariables[1])
 		case 42: //	aload0
-			frame.stack = append(frame.stack, frame.localVariables[0])
+			frame.push(frame.localVariables[0])
 		case 43: // aload1
-			frame.stack = append(frame.stack, frame.localVariables[1])
+			frame.push(frame.localVariables[1])
 		case 60: // istore_1
-			last := frame.stack[len(frame.stack)-1].(int)
-			frame.stack = frame.stack[:len(frame.stack)-1]
-			frame.localVariables[1] = last
+			frame.localVariables[1] = frame.pop().(int)
 		case 61: // istore2
-			last := frame.stack[len(frame.stack)-1].(int)
-			frame.stack = frame.stack[:len(frame.stack)-1]
-			frame.localVariables[2] = last
+			frame.localVariables[2] = frame.pop().(int)
 		case 76: // astore_1
-			last := frame.stack[len(frame.stack)-1]
-			frame.stack = frame.stack[:len(frame.stack)-1]
-			frame.localVariables[1] = last
+			frame.localVariables[1] = frame.pop()
 		case 87: // pop
-			frame.stack = frame.stack[:len(frame.stack)-1]
+			frame.pop()
 		case 89: // dup
 			last := frame.stack[len(frame.stack)-1]
 			frame.stack = append(frame.stack, last)
 		case 96: // iadd
-			first := frame.stack[len(frame.stack)-1].(int)
-			second := frame.stack[len(frame.stack)-2].(int)
-			frame.stack = frame.stack[:len(frame.stack)-2]
+			first := frame.pop().(int)
+			second := frame.pop().(int)
 			frame.stack = append(frame.stack, first+second)
 		case 104: // imul
 			first := frame.pop().(int)
@@ -74,31 +65,18 @@ func (jvm *JVM) Exec(frame *Frame) interface{} {
 		case 172: // ireturn
 			return frame.pop()
 		case 177: // return
-			frame.stack = append(frame.stack, nil)
 			return nil
 		case 180: // getField
-			frame.instructionPointer++
-			indexByte1 := frame.code[frame.instructionPointer]
-			frame.instructionPointer++
-			indexByte2 := frame.code[frame.instructionPointer]
-			_ = (indexByte1 << 8) | indexByte2
-
-			objectRef := frame.pop().(*Class)
-			frame.push(objectRef.fields[0].value)
-			//frame.stack = frame.stack[:len(frame.stack)-1]
-			//frame.stack = append(frame.stack, frame.class.constantPool.resolveFieldRef(u2(fieldRefIndex)))
+			field := frame.class.constantPool.resolveFieldRef(frame.getIndex())
+			objectRef := frame.pop().(*Object)
+			frame.push(objectRef.fields[field.name])
 		case 181: // putField
-			frame.instructionPointer++
-			indexByte1 := frame.code[frame.instructionPointer]
-			frame.instructionPointer++
-			indexByte2 := frame.code[frame.instructionPointer]
-			_ = (indexByte1 << 8) | indexByte2
-
+			field := frame.class.constantPool.resolveFieldRef(frame.getIndex())
 			value := frame.pop().(int)
-			objectRef := frame.pop().(*Class)
-
-			objectRef.fields[0].value = value
+			objectRef := frame.pop().(*Object)
+			objectRef.fields[field.name] = value
 		case 182, 183: // invokespecial, invokeVirtual
+
 			methodRefIndex := frame.getIndex()
 			methodRef := frame.class.constantPool.resolveMethodRef(methodRefIndex)
 
@@ -116,7 +94,8 @@ func (jvm *JVM) Exec(frame *Frame) interface{} {
 				frame.stack = append(frame.stack, result)
 			}
 
-		case 184: // (0xb8)    invokestatic
+		case 184: // invokestatic
+
 			methodRefIndex := frame.getIndex()
 			methodRef := frame.class.constantPool.resolveMethodRef(methodRefIndex)
 
@@ -135,19 +114,15 @@ func (jvm *JVM) Exec(frame *Frame) interface{} {
 			}
 
 		case 187: // new
-			frame.instructionPointer++
-			indexByte1 := frame.code[frame.instructionPointer]
-			frame.instructionPointer++
-			indexByte2 := frame.code[frame.instructionPointer]
-			classIndex := (indexByte1 << 8) | indexByte2
+			classIndex := frame.getIndex()
 
 			className := frame.class.constantPool.resolveString(frame.class.constantPool[classIndex-1].info.ClassIndex)
-			fmt.Printf("className %s\n", className)
-			file, _ := os.Open("Main.class")
-			loader := &ClassLoader{reader: file}
+			class, err := jvm.getClass(className)
+			if err != nil {
+				return nil
+			}
 
-			newClass := loader.loadClass()
-			frame.stack = append(frame.stack, &newClass)
+			frame.push(class.new())
 
 		default:
 			fmt.Printf("wooops unimplemented op code %d\n", op)
@@ -156,6 +131,4 @@ func (jvm *JVM) Exec(frame *Frame) interface{} {
 		frame.instructionPointer++
 
 	}
-
-	return nil
 }

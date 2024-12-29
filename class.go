@@ -21,6 +21,11 @@ type Class struct {
 	attributes   []Attribute
 }
 
+type Object struct {
+	class  *Class
+	fields map[string]interface{}
+}
+
 type Interface struct {
 	name string
 }
@@ -32,4 +37,11 @@ func (class *Class) findMethod(name string, descriptor string) (*Method, error) 
 		}
 	}
 	return nil, errors.New("method not found " + name)
+}
+
+func (class *Class) new() *Object {
+	return &Object{
+		class:  class,
+		fields: make(map[string]interface{}),
+	}
 }
